@@ -23,6 +23,12 @@ bool Window::ShouldClose() const {
   return glfwWindowShouldClose(window_);
 }
 
+void Window::CreateSurface(VkInstance instance, VkSurfaceKHR* surface) {
+  if (glfwCreateWindowSurface(instance, window_, nullptr, surface) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to create window surface!"};
+  }
+}
+
 void Window::FramebufferResizeCallback(GLFWwindow* window, int32_t width, int32_t height) {
   auto* window_ptr = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
   window_ptr->width_ = width;

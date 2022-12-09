@@ -17,7 +17,7 @@ FetchContent_MakeAvailable(vk-bootstrap)
 
 add_library(${PROJECT_NAME}
         include/engine/window.h src/window.cpp
-        )
+        include/engine/device.h src/device.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC

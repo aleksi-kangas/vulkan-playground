@@ -17,6 +17,8 @@ class Window {
 
   [[nodiscard]] bool ShouldClose() const;
 
+  void CreateSurface(VkInstance instance, VkSurfaceKHR* surface);
+
  private:
   GLFWwindow* window_;
   std::string title_;
