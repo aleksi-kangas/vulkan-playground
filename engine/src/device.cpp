@@ -339,7 +339,7 @@ int32_t Device::RatePhysicalDeviceSuitability(VkPhysicalDevice physical_device) 
   if (!physical_device_features.samplerAnisotropy) {
     score = -1;
   }
-  SwapChainSupportDetails swap_chain_support_details = QuerySwapChainSupportDetails(physical_device, surface_);
+  SwapchainSupportDetails swap_chain_support_details = QuerySwapchainSupportDetails(physical_device, surface_);
   if (swap_chain_support_details.formats.empty() || swap_chain_support_details.present_modes.empty()) {
     score = -1;
   }
@@ -362,8 +362,8 @@ bool Device::CheckPhysicalDeviceExtensionSupport(VkPhysicalDevice physical_devic
                      });
 }
 
-SwapChainSupportDetails Device::QuerySwapChainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface) {
-  SwapChainSupportDetails details{};
+SwapchainSupportDetails Device::QuerySwapchainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface) {
+  SwapchainSupportDetails details{};
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &details.capabilities);
 
   uint32_t format_count;

@@ -13,7 +13,7 @@
 #include "engine/window.h"
 
 namespace engine {
-struct SwapChainSupportDetails {
+struct SwapchainSupportDetails {
   VkSurfaceCapabilitiesKHR capabilities;
   std::vector<VkSurfaceFormatKHR> formats;
   std::vector<VkPresentModeKHR> present_modes;
@@ -27,10 +27,16 @@ class Device {
   Device(const Device&) = delete;
   Device& operator=(const Device&) = delete;
 
+  [[nodiscard]] VkDevice GetHandle() const { return device_; }
+  [[nodiscard]] VkSurfaceKHR GetSurface() const { return surface_; }
+
+  VkQueue GetGraphicsQueue() { return graphics_queue_; }
   [[nodiscard]] uint32_t GetGraphicsQueueFamilyIndex() const { return graphics_queue_family_index_; }
+  VkQueue GetPresentQueue() { return present_queue_; }
   [[nodiscard]] uint32_t GetPresentQueueFamilyIndex() const { return present_queue_family_index_; }
-  [[nodiscard]] SwapChainSupportDetails QuerySwapChainSupportDetails() const {
-    return QuerySwapChainSupportDetails(physical_device_, surface_);
+
+  [[nodiscard]] SwapchainSupportDetails QuerySwapchainSupportDetails() const {
+    return QuerySwapchainSupportDetails(physical_device_, surface_);
   }
 
  private:
@@ -62,7 +68,7 @@ class Device {
   int32_t RatePhysicalDeviceSuitability(VkPhysicalDevice physical_device);
   static bool CheckPhysicalDeviceExtensionSupport(VkPhysicalDevice physical_device);
 
-  static SwapChainSupportDetails QuerySwapChainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
+  static SwapchainSupportDetails QuerySwapchainSupportDetails(VkPhysicalDevice physical_device, VkSurfaceKHR surface);
 
 #ifdef ENABLE_VALIDATION_LAYERS
   static constexpr std::array<const char*, 1> kValidationLayers = {"VK_LAYER_KHRONOS_validation"};
