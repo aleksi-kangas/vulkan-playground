@@ -1,6 +1,7 @@
 #include "engine/renderer.h"
 
 #include <cassert>
+#include <utility>
 
 namespace engine {
 Renderer::Renderer(Window& window, Device& device) : window_{window}, device_{device} {
@@ -22,12 +23,13 @@ VkCommandBuffer Renderer::BeginFrame() {
     throw std::runtime_error{"Failed to acquire swap chain image!"};
   }
 
+  auto command_buffer = GetCurrentCommandBuffer();
   VkCommandBufferBeginInfo command_buffer_begin_info{};
   command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  if (vkBeginCommandBuffer(command_buffer_, &command_buffer_begin_info) != VK_SUCCESS) {
+  if (vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info) != VK_SUCCESS) {
     throw std::runtime_error{"Failed to begin recording command buffer!"};
   }
-  return command_buffer_;
+  return command_buffer;
 }
 
 void Renderer::BeginRenderPass(VkCommandBuffer command_buffer) const {
@@ -68,15 +70,20 @@ void Renderer::EndRenderPass(VkCommandBuffer command_buffer) const {
 }
 
 void Renderer::EndFrame() {
-  if (vkEndCommandBuffer(command_buffer_) != VK_SUCCESS) {
+  auto command_buffer = GetCurrentCommandBuffer();
+  if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
     throw std::runtime_error{"Failed to record command buffer!"};
   }
-  auto submit_and_present_result = swap_chain_->SubmitAndPresent(command_buffer_, image_index_);
-  if (submit_and_present_result == VK_ERROR_OUT_OF_DATE_KHR || submit_and_present_result == VK_SUBOPTIMAL_KHR) {
+  auto submit_and_present_result = swap_chain_->SubmitAndPresent(command_buffer, image_index_);
+  if (submit_and_present_result == VK_ERROR_OUT_OF_DATE_KHR || submit_and_present_result == VK_SUBOPTIMAL_KHR ||
+      window_.HasResized()) {
+    window_.ResetResizedFlag();
     RecreateSwapchain();
   } else if (submit_and_present_result != VK_SUCCESS) {
     throw std::runtime_error{"Failed to submit command buffer and present swap chain image!"};
   }
+
+  frame_index_ = (frame_index_ + 1) % Swapchain::kMaxFramesInFlight;
 }
 
 void Renderer::AllocateCommandBuffers() {
@@ -84,20 +91,21 @@ void Renderer::AllocateCommandBuffers() {
   command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   command_buffer_allocate_info.commandPool = device_.GetGraphicsCommandPool();
   command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  command_buffer_allocate_info.commandBufferCount = 1;
+  command_buffer_allocate_info.commandBufferCount = Swapchain::kMaxFramesInFlight;
 
-  if (vkAllocateCommandBuffers(device_.GetHandle(), &command_buffer_allocate_info, &command_buffer_) != VK_SUCCESS) {
+  if (vkAllocateCommandBuffers(device_.GetHandle(), &command_buffer_allocate_info, command_buffers_.data()) !=
+      VK_SUCCESS) {
     throw std::runtime_error{"Failed to allocate command buffers!"};
   }
 }
 
 void Renderer::FreeCommandBuffers() {
-  vkFreeCommandBuffers(device_.GetHandle(), device_.GetGraphicsCommandPool(), 1, &command_buffer_);
+  vkFreeCommandBuffers(device_.GetHandle(), device_.GetGraphicsCommandPool(), Swapchain::kMaxFramesInFlight,
+                       command_buffers_.data());
 }
 
 void Renderer::RecreateSwapchain() {
   assert(swap_chain_);
-
   auto extent = window_.GetExtent();
   while (extent.width == 0 || extent.height == 0) {  // Minimized
     extent = window_.GetExtent();
@@ -105,7 +113,10 @@ void Renderer::RecreateSwapchain() {
   }
   vkDeviceWaitIdle(device_.GetHandle());
 
-  swap_chain_ = std::make_unique<Swapchain>(device_, extent, std::move(swap_chain_));
+  if (swap_chain_) {
+    auto old_swap_chain = std::move(swap_chain_);
+    swap_chain_ = std::make_unique<Swapchain>(device_, extent, std::move(old_swap_chain));
+  }
 }
 
 }  // namespace engine

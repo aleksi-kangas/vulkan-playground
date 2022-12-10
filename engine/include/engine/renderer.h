@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 
 #include "engine/device.h"
@@ -28,7 +29,11 @@ class Renderer {
   std::unique_ptr<Swapchain> swap_chain_;
   uint32_t image_index_ = 0;
 
-  VkCommandBuffer command_buffer_ = VK_NULL_HANDLE;
+  uint32_t frame_index_ = 0;  // [0, Swapchain::kMaxFramesInFlight)
+
+  std::array<VkCommandBuffer, Swapchain::kMaxFramesInFlight> command_buffers_{};
+
+  [[nodiscard]] VkCommandBuffer GetCurrentCommandBuffer() const { return command_buffers_[frame_index_]; }
 
   void AllocateCommandBuffers();
   void FreeCommandBuffers();

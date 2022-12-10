@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -10,6 +11,8 @@
 namespace engine {
 class Swapchain {
  public:
+  static constexpr uint32_t kMaxFramesInFlight = 2;
+
   Swapchain(Device& device, VkExtent2D window_extent, std::unique_ptr<Swapchain> old_swapchain = nullptr);
   ~Swapchain();
 
@@ -36,9 +39,15 @@ class Swapchain {
   VkRenderPass render_pass_ = VK_NULL_HANDLE;
   std::vector<VkFramebuffer> framebuffers_;
 
-  VkSemaphore image_available_semaphore_ = VK_NULL_HANDLE;
-  VkSemaphore render_finished_semaphore_ = VK_NULL_HANDLE;
-  VkFence in_flight_fence_ = VK_NULL_HANDLE;
+  uint32_t frame_index_ = 0;  // [0, kMaxFramesInFlight)
+
+  std::array<VkSemaphore, kMaxFramesInFlight> image_available_semaphores_{};
+  std::array<VkSemaphore, kMaxFramesInFlight> render_finished_semaphores_{};
+  std::array<VkFence, kMaxFramesInFlight> in_flight_fences_{};
+
+  [[nodiscard]] VkSemaphore* GetImageAvailableSemaphore() { return &image_available_semaphores_[frame_index_]; }
+  [[nodiscard]] VkSemaphore* GetRenderFinishedSemaphore() { return &render_finished_semaphores_[frame_index_]; }
+  [[nodiscard]] VkFence* GetInFlightFence() { return &in_flight_fences_[frame_index_]; }
 
   void CreateSwapChain(std::unique_ptr<Swapchain> old_swapchain);
   void CreateImageViews();
