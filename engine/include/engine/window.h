@@ -15,6 +15,7 @@ class Window {
   Window(const Window&) = delete;
   Window& operator=(const Window&) = delete;
 
+  [[nodiscard]] VkExtent2D GetExtent() const { return {static_cast<uint32_t>(width_), static_cast<uint32_t>(height_)}; }
   [[nodiscard]] bool ShouldClose() const;
 
   void CreateSurface(VkInstance instance, VkSurfaceKHR* surface);

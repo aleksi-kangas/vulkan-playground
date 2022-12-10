@@ -10,9 +10,10 @@ find_package(glm REQUIRED)
 
 add_library(${PROJECT_NAME}
         include/engine/device.h src/device.cpp
+        include/engine/renderer.h src/renderer.cpp
         include/engine/swap_chain.h src/swap_chain.cpp
         include/engine/window.h src/window.cpp
-        )
+        src/renderer.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC
