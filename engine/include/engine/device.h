@@ -27,7 +27,7 @@ class Device {
   Device(const Device&) = delete;
   Device& operator=(const Device&) = delete;
 
-  [[nodiscard]] VkCommandPool GetCommandPool() { return command_pool_; }
+  [[nodiscard]] VkCommandPool GetGraphicsCommandPool() { return graphics_command_pool_; }
   [[nodiscard]] VkDevice GetHandle() const { return device_; }
   [[nodiscard]] VkSurfaceKHR GetSurface() const { return surface_; }
 
@@ -57,7 +57,7 @@ class Device {
   VkQueue present_queue_ = VK_NULL_HANDLE;
   uint32_t present_queue_family_index_ = 0;
 
-  VkCommandPool command_pool_ = VK_NULL_HANDLE;
+  VkCommandPool graphics_command_pool_ = VK_NULL_HANDLE;
 
   void CreateInstance();
 #ifdef ENABLE_VALIDATION_LAYERS
@@ -67,7 +67,7 @@ class Device {
   void CreateSurface();
   void PickPhysicalDevice();
   void CreateLogicalDevice();
-  void CreateCommandPool();
+  void CreateGraphicsCommandPool();
 
   int32_t RatePhysicalDeviceSuitability(VkPhysicalDevice physical_device);
   static bool CheckPhysicalDeviceExtensionSupport(VkPhysicalDevice physical_device);

@@ -13,7 +13,7 @@ Renderer::~Renderer() {
 void Renderer::AllocateCommandBuffers() {
   VkCommandBufferAllocateInfo command_buffer_allocate_info{};
   command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  command_buffer_allocate_info.commandPool = device_.GetCommandPool();
+  command_buffer_allocate_info.commandPool = device_.GetGraphicsCommandPool();
   command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   command_buffer_allocate_info.commandBufferCount = 1;
 
@@ -23,7 +23,7 @@ void Renderer::AllocateCommandBuffers() {
 }
 
 void Renderer::FreeCommandBuffers() {
-  vkFreeCommandBuffers(device_.GetHandle(), device_.GetCommandPool(), 1, &command_buffer_);
+  vkFreeCommandBuffers(device_.GetHandle(), device_.GetGraphicsCommandPool(), 1, &command_buffer_);
 }
 
 }  // namespace engine

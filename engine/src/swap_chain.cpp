@@ -21,6 +21,10 @@ Swapchain::~Swapchain() {
   vkDestroySemaphore(device_.GetHandle(), image_available_semaphore_, nullptr);
   vkDestroyFence(device_.GetHandle(), in_flight_fence_, nullptr);
 
+  for (auto framebuffer : framebuffers_) {
+    vkDestroyFramebuffer(device_.GetHandle(), framebuffer, nullptr);
+  }
+
   vkDestroyRenderPass(device_.GetHandle(), render_pass_, nullptr);
 
   for (auto image_view : image_views_) {
