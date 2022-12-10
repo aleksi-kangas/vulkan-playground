@@ -318,7 +318,9 @@ void Device::CreateLogicalDevice() {
   }
 
   vkGetDeviceQueue(device_, queue_family_indices.graphics_family.value(), 0, &graphics_queue_);
+  graphics_queue_family_index_ = queue_family_indices.graphics_family.value();
   vkGetDeviceQueue(device_, queue_family_indices.present_family.value(), 0, &present_queue_);
+  present_queue_family_index_ = queue_family_indices.present_family.value();
 }
 
 void Device::CreateGraphicsCommandPool() {
