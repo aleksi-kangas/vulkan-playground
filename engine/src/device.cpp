@@ -261,6 +261,7 @@ void Device::PickPhysicalDevice() {
 
   if (candidates.rbegin()->first > 0) {
     physical_device_ = candidates.rbegin()->second;
+    vkGetPhysicalDeviceProperties(physical_device_, &physical_device_properties_);
   } else {
     throw std::runtime_error{"Failed to find a suitable GPU!"};
   }
