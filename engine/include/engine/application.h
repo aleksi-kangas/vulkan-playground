@@ -19,7 +19,7 @@ class Application {
   explicit Application(const ApplicationInfo& application_info);
   virtual ~Application() = default;
 
-  virtual void OnFrame(float dt) = 0;
+  virtual void OnFrame(float frame_time) = 0;
 
   void Run();
 
@@ -27,5 +27,7 @@ class Application {
   Window window_;
   Device device_{window_};
   Renderer renderer_{window_, device_};
+
+  void DrawFrame();
 };
 }  // namespace engine

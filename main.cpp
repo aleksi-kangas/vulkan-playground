@@ -8,7 +8,7 @@ class HelloTriangleApplication : public engine::Application {
   explicit HelloTriangleApplication(const engine::ApplicationInfo& application_info = {.title = "Hello Triangle"})
       : engine::Application{application_info} {}
 
-  void OnFrame(float dt) override {}
+  void OnFrame(float frame_time) override {}
 };
 
 int main() {

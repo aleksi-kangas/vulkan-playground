@@ -16,6 +16,10 @@ class Swapchain {
   Swapchain(const Swapchain&) = delete;
   Swapchain& operator=(const Swapchain&) = delete;
 
+  [[nodiscard]] VkExtent2D GetExtent() const { return swapchain_extent_; }
+  [[nodiscard]] VkFramebuffer GetFramebuffer(uint32_t image_index) const { return framebuffers_[image_index]; }
+  [[nodiscard]] VkRenderPass GetRenderPass() const { return render_pass_; }
+
   VkResult AcquireNextImage(uint32_t* image_index);
   VkResult SubmitAndPresent(const VkCommandBuffer& command_buffer, uint32_t image_index);
 

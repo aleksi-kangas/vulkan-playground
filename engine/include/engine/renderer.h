@@ -15,6 +15,12 @@ class Renderer {
   Renderer(const Renderer&) = delete;
   Renderer& operator=(const Renderer&) = delete;
 
+  VkCommandBuffer BeginFrame();
+  void BeginRenderPass(VkCommandBuffer command_buffer) const;
+
+  void EndRenderPass(VkCommandBuffer command_buffer) const;
+  void EndFrame();
+
  private:
   Window& window_;
   Device& device_;
@@ -27,5 +33,6 @@ class Renderer {
   void AllocateCommandBuffers();
   void FreeCommandBuffers();
 
+  void RecreateSwapchain();
 };
 }  // namespace engine
