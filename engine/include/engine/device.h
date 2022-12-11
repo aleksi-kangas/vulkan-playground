@@ -41,6 +41,9 @@ class Device {
     return QuerySwapchainSupportDetails(physical_device_, surface_);
   }
 
+ VkCommandBuffer BeginSingleTimeCommands();
+ void EndSingleTimeCommands(VkCommandBuffer command_buffer);
+
  private:
   Window& window_;
 

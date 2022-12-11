@@ -20,6 +20,8 @@ class Buffer {
   void Write(const void* data, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
   void Flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
 
+  void CopyTo(const Buffer& dst, VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize src_offset = 0, VkDeviceSize dst_offset = 0);
+
  private:
   Device& device_;
 

@@ -14,7 +14,7 @@ struct GraphicsPipelineConfig {
   VkPipelineCreateFlags flags = 0;
 
   std::array<VkVertexInputBindingDescription, 1> vertex_binding_descriptions = Vertex::BindingDescriptions();
-  std::array<VkVertexInputAttributeDescription, 2> vertex_attribute_descriptions = Vertex::AttributeDescriptions();
+  std::array<VkVertexInputAttributeDescription, 4> vertex_attribute_descriptions = Vertex::AttributeDescriptions();
 
   VkPipelineVertexInputStateCreateInfo vertex_input_info{};
   VkPipelineInputAssemblyStateCreateInfo input_assembly_info{};

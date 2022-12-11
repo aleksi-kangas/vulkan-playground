@@ -14,6 +14,7 @@ add_library(${PROJECT_NAME}
         include/engine/device.h src/device.cpp
         include/engine/graphics_pipeline.h src/graphics_pipeline.cpp
         include/engine/math.h
+        include/engine/mesh.h src/mesh.cpp
         include/engine/renderer.h src/renderer.cpp
         include/engine/swap_chain.h src/swap_chain.cpp
         include/engine/utils.h src/utils.cpp

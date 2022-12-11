@@ -166,6 +166,49 @@ uint32_t Device::QueryMemoryType(uint32_t type_filter, VkMemoryPropertyFlags mem
   throw std::runtime_error{"Failed to find suitable memory type!"};
 }
 
+VkCommandBuffer Device::BeginSingleTimeCommands() {
+  VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+  command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  command_buffer_allocate_info.commandPool = graphics_command_pool_;
+  command_buffer_allocate_info.commandBufferCount = 1;
+
+  VkCommandBuffer command_buffer;
+  if (vkAllocateCommandBuffers(device_, &command_buffer_allocate_info, &command_buffer) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to allocate command buffer!"};
+  }
+
+  VkCommandBufferBeginInfo command_buffer_begin_info{};
+  command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  if (vkBeginCommandBuffer(command_buffer, &command_buffer_begin_info) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to begin recording command buffer!"};
+  }
+  return command_buffer;
+}
+
+void Device::EndSingleTimeCommands(VkCommandBuffer command_buffer) {
+  if (vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to record command buffer!"};
+  }
+
+  VkSubmitInfo submit_info{};
+  submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submit_info.commandBufferCount = 1;
+  submit_info.pCommandBuffers = &command_buffer;
+
+  if (vkQueueSubmit(graphics_queue_, 1, &submit_info, VK_NULL_HANDLE) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to submit command buffer!"};
+  }
+
+  if (vkQueueWaitIdle(graphics_queue_) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to wait for command buffer to finish!"};
+  }
+
+  vkFreeCommandBuffers(device_, graphics_command_pool_, 1, &command_buffer);
+}
+
 void Device::CreateInstance() {
 #ifdef ENABLE_VALIDATION_LAYERS
   if (!CheckValidationLayerSupport()) {

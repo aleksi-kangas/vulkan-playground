@@ -45,6 +45,18 @@ void Buffer::Flush(VkDeviceSize size, VkDeviceSize offset) {
   vkFlushMappedMemoryRanges(device_.GetHandle(), 1, &mapped_memory_range);
 }
 
+void Buffer::CopyTo(const Buffer& dst, VkDeviceSize size, VkDeviceSize src_offset, VkDeviceSize dst_offset) {
+  VkCommandBuffer command_buffer = device_.BeginSingleTimeCommands();
+
+  VkBufferCopy copy_region{};
+  copy_region.srcOffset = src_offset;
+  copy_region.dstOffset = dst_offset;
+  copy_region.size = size;
+  vkCmdCopyBuffer(command_buffer, buffer_, dst.GetHandle(), 1, &copy_region);
+
+  device_.EndSingleTimeCommands(command_buffer);
+}
+
 void Buffer::Create(VkDeviceSize size, VkBufferUsageFlags usage_flags, VkMemoryPropertyFlags memory_property_flags) {
   VkBufferCreateInfo buffer_create_info{};
   buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
