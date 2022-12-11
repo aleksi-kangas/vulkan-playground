@@ -8,6 +8,13 @@ find_package(Vulkan REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
+FetchContent_Declare(
+        tinyobjloader
+        GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader
+        GIT_TAG 2f947710aeedea2089ade2b62ef669521d90f2ef
+)
+FetchContent_MakeAvailable(tinyobjloader)
+
 add_library(${PROJECT_NAME}
         include/engine/application.h src/application.cpp
         include/engine/buffer.h src/buffer.cpp
@@ -28,5 +35,6 @@ target_link_libraries(${PROJECT_NAME}
         Vulkan::Vulkan
         glfw
         glm::glm
+        tinyobjloader
         )
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)

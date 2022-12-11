@@ -9,6 +9,10 @@ add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE engine)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
 
+# Assets
+add_custom_target(assets ALL COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/assets)
+add_dependencies(${PROJECT_NAME} assets)
+
 # Shaders
 file(GLOB_RECURSE SHADERS
         CONFIGURE_DEPENDS
