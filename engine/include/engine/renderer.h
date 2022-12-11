@@ -16,6 +16,8 @@ class Renderer {
   Renderer(const Renderer&) = delete;
   Renderer& operator=(const Renderer&) = delete;
 
+  [[nodiscard]] VkRenderPass GetRenderPass() const { return swap_chain_->GetRenderPass(); }
+
   VkCommandBuffer BeginFrame();
   void BeginRenderPass(VkCommandBuffer command_buffer) const;
 

@@ -7,6 +7,9 @@
 #include "engine/renderer.h"
 #include "engine/window.h"
 
+// TODO Move to a proper place...
+#include "engine/graphics_pipeline.h"
+
 namespace engine {
 struct ApplicationInfo {
   std::string title = "Application";
@@ -28,6 +31,6 @@ class Application {
   Device device_{window_};
   Renderer renderer_{window_, device_};
 
-  void DrawFrame();
+  void DrawFrame(engine::GraphicsPipeline& graphics_pipeline);
 };
 }  // namespace engine
