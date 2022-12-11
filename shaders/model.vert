@@ -7,13 +7,16 @@ layout (location = 3) in vec2 uv;
 
 layout (location = 0) out vec3 fragColor;
 
+layout (set = 0, binding = 0) uniform UniformBufferObject {
+  mat4 projection;
+  mat4 view;
+} ubo;
+
 layout (push_constant) uniform PushConstant {
   mat4 model;
-  mat4 view;
-  mat4 projection;
 } pushConstant;
 
 void main() {
-  gl_Position = pushConstant.projection * pushConstant.view * pushConstant.model * vec4(position, 1.0);
+  gl_Position = ubo.projection * ubo.view * pushConstant.model * vec4(position, 1.0);
   fragColor = color;
 }

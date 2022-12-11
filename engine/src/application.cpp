@@ -4,9 +4,87 @@
 
 #include <vulkan/vulkan.h>
 
+namespace {
+struct UniformBufferObject {
+  glm::mat4 projection;
+  glm::mat4 view;
+};
+}  // namespace
+
 namespace engine {
 Application::Application(const ApplicationInfo& application_info)
-    : window_{application_info.title, application_info.window_width, application_info.window_height} {}
+    : window_{application_info.title, application_info.window_width, application_info.window_height} {
+  // TODO Hard code for now...
+  camera_.SetViewTarget({0.0f, -50.0f, -100.0f}, {0.0f, 0.0f, 0.0f});
+
+  for (uint32_t i = 0; i < Swapchain::kMaxFramesInFlight; ++i) {
+    uniform_buffers_[i] =
+        std::make_unique<Buffer>(device_, sizeof(UniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    uniform_buffers_[i]->Map();
+  }
+
+  // Descriptor pool
+  std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{
+      {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Swapchain::kMaxFramesInFlight}},
+  };
+  VkDescriptorPoolCreateInfo descriptor_pool_info{};
+  descriptor_pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  descriptor_pool_info.poolSizeCount = static_cast<uint32_t>(descriptor_pool_sizes.size());
+  descriptor_pool_info.pPoolSizes = descriptor_pool_sizes.data();
+  descriptor_pool_info.maxSets = Swapchain::kMaxFramesInFlight;
+  if (vkCreateDescriptorPool(device_.GetHandle(), &descriptor_pool_info, nullptr, &global_descriptor_pool_) !=
+      VK_SUCCESS) {
+    throw std::runtime_error{"Failed to create descriptor pool"};
+  }
+
+  // Descriptor set layout
+  std::array<VkDescriptorSetLayoutBinding, 1> global_descriptor_set_layout_bindings{
+      {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}},
+  };
+  VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info{};
+  descriptor_set_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  descriptor_set_layout_info.bindingCount = static_cast<uint32_t>(global_descriptor_set_layout_bindings.size());
+  descriptor_set_layout_info.pBindings = global_descriptor_set_layout_bindings.data();
+  if (vkCreateDescriptorSetLayout(device_.GetHandle(), &descriptor_set_layout_info, nullptr,
+                                  &global_descriptor_set_layout_) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to create descriptor set layout"};
+  }
+
+  // Descriptor sets
+  std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts{global_descriptor_set_layout_};
+  for (uint32_t i = 0; i < Swapchain::kMaxFramesInFlight; ++i) {
+    VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
+    descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    descriptor_set_allocate_info.descriptorPool = global_descriptor_pool_;
+    descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t>(descriptor_set_layouts.size());
+    descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
+    if (vkAllocateDescriptorSets(device_.GetHandle(), &descriptor_set_allocate_info, &global_descriptor_sets_[i]) !=
+        VK_SUCCESS) {
+      throw std::runtime_error{"Failed to allocate descriptor sets"};
+    }
+
+    VkDescriptorBufferInfo buffer_info{};
+    buffer_info.buffer = uniform_buffers_[i]->GetHandle();
+    buffer_info.offset = 0;
+    buffer_info.range = sizeof(UniformBufferObject);
+
+    std::array<VkWriteDescriptorSet, 1> descriptor_writes{
+        {{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, global_descriptor_sets_[i], 0, 0, 1,
+          VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, nullptr, &buffer_info, nullptr}},
+    };
+    vkUpdateDescriptorSets(device_.GetHandle(), static_cast<uint32_t>(descriptor_writes.size()),
+                           descriptor_writes.data(), 0, nullptr);
+  }
+
+  model_render_system_ =
+      std::make_unique<systems::ModelRenderSystem>(device_, renderer_.GetRenderPass(), global_descriptor_set_layout_);
+}
+
+Application::~Application() {
+  vkDestroyDescriptorSetLayout(device_.GetHandle(), global_descriptor_set_layout_, nullptr);
+  vkDestroyDescriptorPool(device_.GetHandle(), global_descriptor_pool_, nullptr);
+}
 
 void Application::Run() {
   auto frame_start_time = std::chrono::high_resolution_clock::now();
@@ -25,10 +103,21 @@ void Application::Run() {
 }
 
 void Application::DrawFrame() {
+  camera_.SetPerspective(glm::radians(45.0f), renderer_.GetAspectRatio(), 0.1f, 1000.0f);
+
   if (auto command_buffer = renderer_.BeginFrame()) {
+    // Update
+    UniformBufferObject ubo{
+        .projection = camera_.GetProjection(),
+        .view = camera_.GetView(),
+    };
+    uniform_buffers_[renderer_.GetFrameIndex()]->Write(&ubo);
+    uniform_buffers_[renderer_.GetFrameIndex()]->Flush();
+
+    // Render
     renderer_.BeginRenderPass(command_buffer);
 
-    model_render_system_.Render(command_buffer, models_);
+    model_render_system_->Render(command_buffer, models_, global_descriptor_sets_[renderer_.GetFrameIndex()]);
 
     renderer_.EndRenderPass(command_buffer);
     renderer_.EndFrame();

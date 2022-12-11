@@ -16,6 +16,8 @@ class Renderer {
   Renderer(const Renderer&) = delete;
   Renderer& operator=(const Renderer&) = delete;
 
+  [[nodiscard]] float GetAspectRatio() const { return swap_chain_->GetAspectRatio(); }
+  [[nodiscard]] uint32_t GetFrameIndex() const { return frame_index_; }
   [[nodiscard]] VkRenderPass GetRenderPass() const { return swap_chain_->GetRenderPass(); }
 
   VkCommandBuffer BeginFrame();

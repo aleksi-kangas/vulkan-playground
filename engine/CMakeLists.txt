@@ -18,6 +18,7 @@ FetchContent_MakeAvailable(tinyobjloader)
 add_library(${PROJECT_NAME}
         include/engine/application.h src/application.cpp
         include/engine/buffer.h src/buffer.cpp
+        include/engine/camera.h src/camera.cpp
         include/engine/device.h src/device.cpp
         include/engine/graphics_pipeline.h src/graphics_pipeline.cpp
         include/engine/math.h
