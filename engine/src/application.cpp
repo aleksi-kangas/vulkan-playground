@@ -31,8 +31,8 @@ void Application::Run() {
   engine::GraphicsPipelineConfig graphics_pipeline_config = engine::GraphicsPipelineConfig::Default();
   graphics_pipeline_config.pipeline_layout = CreatePipelineLayout(device_);
   graphics_pipeline_config.render_pass = renderer_.GetRenderPass();
-  engine::GraphicsPipeline pipeline{device_, graphics_pipeline_config, "shaders/triangle.vert.spv",
-                                    "shaders/triangle.frag.spv"};
+  engine::GraphicsPipeline pipeline{device_, graphics_pipeline_config, "shaders/model.vert.spv",
+                                    "shaders/model.frag.spv"};
 
   while (!window_.ShouldClose()) {
     glfwPollEvents();
@@ -56,7 +56,8 @@ void Application::DrawFrame(engine::GraphicsPipeline& pipeline) {
 
     pipeline.Bind(command_buffer);
 
-    vkCmdDraw(command_buffer, 3, 1, 0, 0);
+    model_->Bind(command_buffer);
+    model_->Draw(command_buffer);
 
     renderer_.EndRenderPass(command_buffer);
     renderer_.EndFrame();

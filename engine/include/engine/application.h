@@ -4,6 +4,7 @@
 #include <string>
 
 #include "engine/device.h"
+#include "engine/model.h"
 #include "engine/renderer.h"
 #include "engine/window.h"
 
@@ -19,18 +20,21 @@ struct ApplicationInfo {
 
 class Application {
  public:
+  void Run();
+
+ protected:
   explicit Application(const ApplicationInfo& application_info);
   virtual ~Application() = default;
 
   virtual void OnFrame(float frame_time) = 0;
 
-  void Run();
-
- private:
   Window window_;
   Device device_{window_};
   Renderer renderer_{window_, device_};
 
+  std::unique_ptr<engine::Model> model_;
+
+ private:
   void DrawFrame(engine::GraphicsPipeline& graphics_pipeline);
 };
 }  // namespace engine
