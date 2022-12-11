@@ -36,6 +36,7 @@ class Device {
   VkQueue GetPresentQueue() { return present_queue_; }
   [[nodiscard]] uint32_t GetPresentQueueFamilyIndex() const { return present_queue_family_index_; }
 
+  [[nodiscard]] uint32_t QueryMemoryType(uint32_t type_filter, VkMemoryPropertyFlags memory_property_flags) const;
   [[nodiscard]] SwapchainSupportDetails QuerySwapchainSupportDetails() const {
     return QuerySwapchainSupportDetails(physical_device_, surface_);
   }

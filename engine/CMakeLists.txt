@@ -10,6 +10,7 @@ find_package(glm REQUIRED)
 
 add_library(${PROJECT_NAME}
         include/engine/application.h src/application.cpp
+        include/engine/buffer.h src/buffer.cpp
         include/engine/device.h src/device.cpp
         include/engine/graphics_pipeline.h src/graphics_pipeline.cpp
         include/engine/renderer.h src/renderer.cpp

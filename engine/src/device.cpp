@@ -146,12 +146,24 @@ Device::~Device() {
   vkDestroySurfaceKHR(instance_, surface_, nullptr);
 
 #ifdef ENABLE_VALIDATION_LAYERS
-  auto vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-      vkGetInstanceProcAddr(instance_, "vkDestroyDebugUtilsMessengerEXT"));
-  vkDestroyDebugUtilsMessengerEXT(instance_, debug_utils_messenger_, nullptr);
+  DestroyDebugUtilsMessengerEXT(instance_, debug_utils_messenger_, nullptr);
 #endif
 
   vkDestroyInstance(instance_, nullptr);
+}
+
+uint32_t Device::QueryMemoryType(uint32_t type_filter, VkMemoryPropertyFlags memory_property_flags) const {
+  VkPhysicalDeviceMemoryProperties memory_properties;
+  vkGetPhysicalDeviceMemoryProperties(physical_device_, &memory_properties);
+
+  for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
+    if ((type_filter & (1 << i)) &&
+        (memory_properties.memoryTypes[i].propertyFlags & memory_property_flags) == memory_property_flags) {
+      return i;
+    }
+  }
+
+  throw std::runtime_error{"Failed to find suitable memory type!"};
 }
 
 void Device::CreateInstance() {
