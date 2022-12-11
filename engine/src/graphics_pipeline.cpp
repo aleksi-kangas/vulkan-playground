@@ -1,6 +1,7 @@
 #include "engine/graphics_pipeline.h"
 
 #include <cassert>
+#include <cstdint>
 #include <stdexcept>
 
 #include "engine/utils.h"
@@ -10,10 +11,12 @@ GraphicsPipelineConfig GraphicsPipelineConfig::Default() {
   GraphicsPipelineConfig config{};
 
   config.vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  config.vertex_input_info.vertexBindingDescriptionCount = 0;
-  config.vertex_input_info.pVertexBindingDescriptions = nullptr;
-  config.vertex_input_info.vertexAttributeDescriptionCount = 0;
-  config.vertex_input_info.pVertexAttributeDescriptions = nullptr;
+  config.vertex_input_info.vertexBindingDescriptionCount =
+      static_cast<uint32_t>(config.vertex_binding_descriptions.size());
+  config.vertex_input_info.pVertexBindingDescriptions = config.vertex_binding_descriptions.data();
+  config.vertex_input_info.vertexAttributeDescriptionCount =
+      static_cast<uint32_t>(config.vertex_attribute_descriptions.size());
+  config.vertex_input_info.pVertexAttributeDescriptions = config.vertex_attribute_descriptions.data();
 
   config.input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   config.input_assembly_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
