@@ -7,6 +7,8 @@
 namespace {
 struct PushConstants {
   glm::mat4 model;
+  glm::mat4 view;
+  glm::mat4 projection;
 };
 }  // namespace
 
@@ -27,6 +29,8 @@ void ModelRenderSystem::Render(VkCommandBuffer command_buffer, const std::vector
   for (const auto& model : models) {
     PushConstants push_constants{
         .model = model->GetTransform().Mat4(),
+        .view = glm::lookAt(glm::vec3(-100.0f, -100.0f, 100.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        .projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f),
     };
     vkCmdPushConstants(command_buffer, pipeline_layout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants),
                        &push_constants);
