@@ -6,10 +6,8 @@
 #include "engine/device.h"
 #include "engine/model.h"
 #include "engine/renderer.h"
+#include "engine/systems/model_render_system.h"
 #include "engine/window.h"
-
-// TODO Move to a proper place...
-#include "engine/graphics_pipeline.h"
 
 namespace engine {
 struct ApplicationInfo {
@@ -32,9 +30,11 @@ class Application {
   Device device_{window_};
   Renderer renderer_{window_, device_};
 
-  std::unique_ptr<engine::Model> model_;
+  std::vector<std::unique_ptr<Model>> models_;
 
  private:
-  void DrawFrame(engine::GraphicsPipeline& graphics_pipeline);
+  engine::systems::ModelRenderSystem model_render_system_{device_, renderer_.GetRenderPass()};
+
+  void DrawFrame();
 };
 }  // namespace engine

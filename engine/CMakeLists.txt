@@ -25,9 +25,12 @@ add_library(${PROJECT_NAME}
         include/engine/model.h src/model.cpp
         include/engine/renderer.h src/renderer.cpp
         include/engine/swap_chain.h src/swap_chain.cpp
+        include/engine/transform.h src/transform.cpp
         include/engine/utils.h src/utils.cpp
         include/engine/vertex.h src/vertex.cpp
         include/engine/window.h src/window.cpp
+
+        include/engine/systems/model_render_system.h src/systems/model_render_system.cpp
         )
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME}
