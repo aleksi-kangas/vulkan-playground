@@ -27,6 +27,7 @@ add_library(${PROJECT_NAME}
         include/engine/renderer.h src/renderer.cpp
         include/engine/swap_chain.h src/swap_chain.cpp
         include/engine/transform.h src/transform.cpp
+        include/engine/uniforms.h
         include/engine/utils.h src/utils.cpp
         include/engine/vertex.h src/vertex.cpp
         include/engine/window.h src/window.cpp

@@ -4,12 +4,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace {
-struct UniformBufferObject {
-  glm::mat4 projection;
-  glm::mat4 view;
-};
-}  // namespace
+#include "engine/uniforms.h"
 
 namespace engine {
 Application::Application(const ApplicationInfo& application_info)
@@ -19,7 +14,7 @@ Application::Application(const ApplicationInfo& application_info)
 
   for (uint32_t i = 0; i < Swapchain::kMaxFramesInFlight; ++i) {
     uniform_buffers_[i] =
-        std::make_unique<Buffer>(device_, sizeof(UniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        std::make_unique<Buffer>(device_, sizeof(GlobalUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     uniform_buffers_[i]->Map();
   }
@@ -67,7 +62,7 @@ Application::Application(const ApplicationInfo& application_info)
     VkDescriptorBufferInfo buffer_info{};
     buffer_info.buffer = uniform_buffers_[i]->GetHandle();
     buffer_info.offset = 0;
-    buffer_info.range = sizeof(UniformBufferObject);
+    buffer_info.range = sizeof(GlobalUniformBufferObject);
 
     std::array<VkWriteDescriptorSet, 1> descriptor_writes{
         {{VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET, nullptr, global_descriptor_sets_[i], 0, 0, 1,
@@ -107,7 +102,7 @@ void Application::DrawFrame() {
 
   if (auto command_buffer = renderer_.BeginFrame()) {
     // Update
-    UniformBufferObject ubo{
+    GlobalUniformBufferObject ubo{
         .projection = camera_.GetProjection(),
         .view = camera_.GetView(),
     };
