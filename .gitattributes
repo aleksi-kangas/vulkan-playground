@@ -1,0 +1,2 @@
+# Exclude engine/lib/ from linguist
+engine/lib/** linguist-vendored
