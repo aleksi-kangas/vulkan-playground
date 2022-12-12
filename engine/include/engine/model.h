@@ -7,6 +7,7 @@
 
 #include "engine/device.h"
 #include "engine/mesh.h"
+#include "engine/textures/texture.h"
 #include "engine/transform.h"
 #include "engine/vertex.h"
 
@@ -29,13 +30,15 @@ class Model {
 
   Transform& GetTransform() { return transform_; }
   void AttachMesh(std::shared_ptr<Mesh> mesh) { mesh_ = std::move(mesh); }
+  void AttachTexture(std::shared_ptr<textures::Texture> texture) { texture_ = std::move(texture); }
 
-  void Bind(VkCommandBuffer command_buffer) const;
+  void Bind(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout) const;
   void Draw(VkCommandBuffer command_buffer) const;
 
  private:
   Transform transform_;
 
   std::shared_ptr<Mesh> mesh_;
+  std::shared_ptr<textures::Texture> texture_;
 };
 }  // namespace engine

@@ -37,7 +37,7 @@ void ModelRenderSystem::Render(VkCommandBuffer command_buffer, const std::vector
     vkCmdPushConstants(command_buffer, pipeline_layout_, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstants),
                        &push_constants);
 
-    model->Bind(command_buffer);
+    model->Bind(command_buffer, pipeline_layout_);
     model->Draw(command_buffer);
   }
 }
@@ -48,7 +48,26 @@ void ModelRenderSystem::CreatePipelineLayout(VkDescriptorSetLayout global_descri
   push_constant_range.offset = 0;
   push_constant_range.size = sizeof(PushConstants);
 
-  std::array<VkDescriptorSetLayout, 1> descriptor_set_layouts = {global_descriptor_set_layout};
+  // TODO Temporary, where should this be stored?
+  VkDescriptorSetLayoutBinding texture_descriptor_set_layout_binding{};
+  texture_descriptor_set_layout_binding.binding = 0;
+  texture_descriptor_set_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  texture_descriptor_set_layout_binding.descriptorCount = 1;
+  texture_descriptor_set_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutCreateInfo texture_descriptor_set_layout_info{};
+  texture_descriptor_set_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  texture_descriptor_set_layout_info.bindingCount = 1;
+  texture_descriptor_set_layout_info.pBindings = &texture_descriptor_set_layout_binding;
+
+  VkDescriptorSetLayout texture_descriptor_set_layout = VK_NULL_HANDLE;
+  if (vkCreateDescriptorSetLayout(device_.GetHandle(), &texture_descriptor_set_layout_info, nullptr,
+                                  &texture_descriptor_set_layout) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to create descriptor set layout"};
+  }
+
+  std::array<VkDescriptorSetLayout, 2> descriptor_set_layouts = {global_descriptor_set_layout,
+                                                                 texture_descriptor_set_layout};
 
   VkPipelineLayoutCreateInfo pipeline_layout_create_info{};
   pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

@@ -85,9 +85,11 @@ std::unique_ptr<Model> Model::CreateFromFile(Device& device, const std::filesyst
   return model;
 }
 
-void Model::Bind(VkCommandBuffer command_buffer) const {
+void Model::Bind(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout) const {
   assert(mesh_);
   mesh_->Bind(command_buffer);
+  assert(texture_);
+  texture_->Bind(command_buffer, pipeline_layout);
 }
 
 void Model::Draw(VkCommandBuffer command_buffer) const {
