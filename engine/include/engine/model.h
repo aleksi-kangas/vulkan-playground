@@ -7,9 +7,9 @@
 
 #include "engine/device.h"
 #include "engine/mesh.h"
-#include "engine/textures/texture.h"
 #include "engine/transform.h"
 #include "engine/vertex.h"
+#include "texture.h"
 
 namespace engine {
 struct ModelLoader {
@@ -30,7 +30,7 @@ class Model {
 
   Transform& GetTransform() { return transform_; }
   void AttachMesh(std::shared_ptr<Mesh> mesh) { mesh_ = std::move(mesh); }
-  void AttachTexture(std::shared_ptr<textures::Texture> texture) { texture_ = std::move(texture); }
+  void AttachTexture(Texture* texture) { texture_ = texture; }
 
   void Bind(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout) const;
   void Draw(VkCommandBuffer command_buffer) const;
@@ -39,6 +39,6 @@ class Model {
   Transform transform_;
 
   std::shared_ptr<Mesh> mesh_;
-  std::shared_ptr<textures::Texture> texture_;
+  Texture* texture_ = nullptr;
 };
 }  // namespace engine

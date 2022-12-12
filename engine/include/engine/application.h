@@ -10,6 +10,7 @@
 #include "engine/renderer.h"
 #include "engine/systems/model_render_system.h"
 #include "engine/window.h"
+#include "engine/texture.h"
 
 namespace engine {
 struct ApplicationInfo {
@@ -32,6 +33,7 @@ class Application {
   Device device_{window_};
   Renderer renderer_{window_, device_};
   Camera camera_{};
+  engine::TextureManager texture_manager_{device_};
 
   std::vector<std::unique_ptr<Model>> models_;
 
@@ -40,7 +42,6 @@ class Application {
 
   // TODO Abstraction?
   std::vector<std::unique_ptr<Buffer>> uniform_buffers_{Swapchain::kMaxFramesInFlight};
-  VkDescriptorPool global_descriptor_pool_ = VK_NULL_HANDLE;
   VkDescriptorSetLayout global_descriptor_set_layout_ = VK_NULL_HANDLE;
   std::vector<VkDescriptorSet> global_descriptor_sets_{Swapchain::kMaxFramesInFlight, VK_NULL_HANDLE};
 

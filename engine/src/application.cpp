@@ -19,20 +19,6 @@ Application::Application(const ApplicationInfo& application_info)
     uniform_buffers_[i]->Map();
   }
 
-  // Descriptor pool
-  std::array<VkDescriptorPoolSize, 1> descriptor_pool_sizes{
-      {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, Swapchain::kMaxFramesInFlight}},
-  };
-  VkDescriptorPoolCreateInfo descriptor_pool_info{};
-  descriptor_pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  descriptor_pool_info.poolSizeCount = static_cast<uint32_t>(descriptor_pool_sizes.size());
-  descriptor_pool_info.pPoolSizes = descriptor_pool_sizes.data();
-  descriptor_pool_info.maxSets = Swapchain::kMaxFramesInFlight;
-  if (vkCreateDescriptorPool(device_.GetHandle(), &descriptor_pool_info, nullptr, &global_descriptor_pool_) !=
-      VK_SUCCESS) {
-    throw std::runtime_error{"Failed to create descriptor pool"};
-  }
-
   // Descriptor set layout
   std::array<VkDescriptorSetLayoutBinding, 1> global_descriptor_set_layout_bindings{
       {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}},
@@ -51,7 +37,7 @@ Application::Application(const ApplicationInfo& application_info)
   for (uint32_t i = 0; i < Swapchain::kMaxFramesInFlight; ++i) {
     VkDescriptorSetAllocateInfo descriptor_set_allocate_info{};
     descriptor_set_allocate_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-    descriptor_set_allocate_info.descriptorPool = global_descriptor_pool_;
+    descriptor_set_allocate_info.descriptorPool = device_.GetDescriptorPool();
     descriptor_set_allocate_info.descriptorSetCount = static_cast<uint32_t>(descriptor_set_layouts.size());
     descriptor_set_allocate_info.pSetLayouts = descriptor_set_layouts.data();
     if (vkAllocateDescriptorSets(device_.GetHandle(), &descriptor_set_allocate_info, &global_descriptor_sets_[i]) !=
@@ -78,7 +64,6 @@ Application::Application(const ApplicationInfo& application_info)
 
 Application::~Application() {
   vkDestroyDescriptorSetLayout(device_.GetHandle(), global_descriptor_set_layout_, nullptr);
-  vkDestroyDescriptorPool(device_.GetHandle(), global_descriptor_pool_, nullptr);
 }
 
 void Application::Run() {

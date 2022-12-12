@@ -1,9 +1,27 @@
-#include "engine/textures/texture.h"
+#include "engine/texture.h"
 
 #include "engine/buffer.h"
 #include "engine/utils.h"
 
-namespace engine::textures {
+namespace engine {
+Texture* Texture::CreateFromFile(TextureManager& manager, const std::filesystem::path& file_path) {
+  return manager.Add(file_path.string(), std::unique_ptr<Texture>(new Texture{manager.device_, file_path}));
+}
+
+Texture::~Texture() {
+  vkDestroyDescriptorSetLayout(device_.GetHandle(), descriptor_set_layout_, nullptr);
+
+  vkDestroySampler(device_.GetHandle(), sampler_, nullptr);
+  vkDestroyImageView(device_.GetHandle(), image_view_, nullptr);
+  vkDestroyImage(device_.GetHandle(), image_, nullptr);
+  vkFreeMemory(device_.GetHandle(), memory_, nullptr);
+}
+
+void Texture::Bind(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout) {
+  vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 1, 1, &descriptor_set_, 0,
+                          nullptr);
+}
+
 Texture::Texture(Device& device, const std::filesystem::path& file_path) : device_{device} {
   uint32_t width, height, channels;
   const std::vector<uint8_t> image_bytes = utils::ReadImage(file_path, width, height, channels);
@@ -11,7 +29,6 @@ Texture::Texture(Device& device, const std::filesystem::path& file_path) : devic
   CreateImageView();
   CreateSampler();
 
-  // TODO For now, hardcode this here...
   VkDescriptorSetLayoutBinding layout_binding = {
       .binding = 0,
       .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -28,23 +45,9 @@ Texture::Texture(Device& device, const std::filesystem::path& file_path) : devic
     throw std::runtime_error{"Failed to create descriptor set layout!"};
   }
 
-  VkDescriptorPoolSize pool_size = {
-      .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-      .descriptorCount = 1,
-  };
-  VkDescriptorPoolCreateInfo pool_info = {
-      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-      .maxSets = 1,
-      .poolSizeCount = 1,
-      .pPoolSizes = &pool_size,
-  };
-  if (vkCreateDescriptorPool(device_.GetHandle(), &pool_info, nullptr, &descriptor_pool_) != VK_SUCCESS) {
-    throw std::runtime_error{"Failed to create descriptor pool!"};
-  }
-
   VkDescriptorSetAllocateInfo alloc_info = {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-      .descriptorPool = descriptor_pool_,
+      .descriptorPool = device_.GetDescriptorPool(),
       .descriptorSetCount = 1,
       .pSetLayouts = &descriptor_set_layout_,
   };
@@ -63,18 +66,6 @@ Texture::Texture(Device& device, const std::filesystem::path& file_path) : devic
       .pImageInfo = &image_info,
   };
   vkUpdateDescriptorSets(device_.GetHandle(), 1, &descriptor_write, 0, nullptr);
-}
-
-Texture::~Texture() {
-  vkDestroySampler(device_.GetHandle(), sampler_, nullptr);
-  vkDestroyImageView(device_.GetHandle(), image_view_, nullptr);
-  vkDestroyImage(device_.GetHandle(), image_, nullptr);
-  vkFreeMemory(device_.GetHandle(), memory_, nullptr);
-}
-
-void Texture::Bind(VkCommandBuffer command_buffer, VkPipelineLayout pipeline_layout) {
-  vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, 1, 1, &descriptor_set_, 0,
-                          nullptr);
 }
 
 void Texture::CreateImage(const std::vector<uint8_t>& bytes, uint32_t width, uint32_t height) {
@@ -218,4 +209,4 @@ void Texture::TransitionImageLayout(VkImage image, VkImageLayout old_layout, VkI
   device_.EndSingleTimeCommands(command_buffer);
 }
 
-}  // namespace engine::textures
+}  // namespace engine

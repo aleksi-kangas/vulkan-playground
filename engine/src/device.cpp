@@ -136,9 +136,12 @@ Device::Device(Window& window) : window_{window} {
   PickPhysicalDevice();
   CreateLogicalDevice();
   CreateGraphicsCommandPool();
+  CreateDescriptorPool();
 }
 
 Device::~Device() {
+  vkDestroyDescriptorPool(device_, descriptor_pool_, nullptr);
+
   vkDestroyCommandPool(device_, graphics_command_pool_, nullptr);
 
   vkDestroyDevice(device_, nullptr);
@@ -388,6 +391,23 @@ void Device::CreateGraphicsCommandPool() {
 
   if (vkCreateCommandPool(device_, &pool_info, nullptr, &graphics_command_pool_) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create command pool!");
+  }
+}
+
+void Device::CreateDescriptorPool() {
+  std::array<VkDescriptorPoolSize, 2> pool_sizes{{
+      {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100},
+      {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100},
+  }};
+
+  VkDescriptorPoolCreateInfo pool_info{};
+  pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+  pool_info.pPoolSizes = pool_sizes.data();
+  pool_info.maxSets = 1000;
+
+  if (vkCreateDescriptorPool(device_, &pool_info, nullptr, &descriptor_pool_) != VK_SUCCESS) {
+    throw std::runtime_error{"Failed to create descriptor pool!"};
   }
 }
 
