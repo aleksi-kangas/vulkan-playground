@@ -32,7 +32,7 @@ class Application {
   Window window_;
   Device device_{window_};
   Renderer renderer_{window_, device_};
-  Camera camera_{};
+  Camera camera_{window_};
   engine::TextureManager texture_manager_{device_};
 
   std::vector<std::unique_ptr<Model>> models_;

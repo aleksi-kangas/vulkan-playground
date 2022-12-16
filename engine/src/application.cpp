@@ -9,8 +9,6 @@
 namespace engine {
 Application::Application(const ApplicationInfo& application_info)
     : window_{application_info.title, application_info.window_width, application_info.window_height} {
-  // TODO Hard code for now...
-  camera_.SetViewTarget({0.0f, -50.0f, -100.0f}, {0.0f, 0.0f, 0.0f});
 
   for (uint32_t i = 0; i < Swapchain::kMaxFramesInFlight; ++i) {
     uniform_buffers_[i] =
@@ -76,6 +74,7 @@ void Application::Run() {
         std::chrono::duration<float, std::chrono::seconds::period>(current_time - frame_start_time).count();
     frame_start_time = current_time;
 
+    camera_.ProcessInput(frame_time);
     OnFrame(frame_time);
     DrawFrame();
   }

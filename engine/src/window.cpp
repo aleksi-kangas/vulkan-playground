@@ -12,6 +12,7 @@ Window::Window(std::string title, uint32_t width, uint32_t height)
   glfwSetWindowUserPointer(window_, this);
   glfwSetFramebufferSizeCallback(window_, FramebufferResizeCallback);
   glfwSetKeyCallback(window_, ExitOnEscapeCallback);
+  glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 Window::~Window() {
@@ -38,7 +39,7 @@ void Window::FramebufferResizeCallback(GLFWwindow* glfw_window, int32_t width, i
 
 void Window::ExitOnEscapeCallback(GLFWwindow* glfw_window, int32_t key, int32_t /* scancode */, int32_t action,
                                   int32_t /* mods */) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+  if (key == static_cast<int32_t>(Keys::kEscape) && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(glfw_window, GLFW_TRUE);
   }
 }
