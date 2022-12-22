@@ -20,6 +20,8 @@ class Mesh {
   Mesh(const Mesh&) = delete;
   Mesh& operator=(const Mesh&) = delete;
 
+  static std::unique_ptr<Mesh> CreateSphereMesh(Device& device, uint32_t cube_face_resolution);
+
   void Bind(VkCommandBuffer command_buffer) const;
   void Draw(VkCommandBuffer command_buffer) const;
 

@@ -9,8 +9,12 @@ class HelloTriangleApplication : public engine::Application {
  public:
   explicit HelloTriangleApplication(const engine::ApplicationInfo& application_info = {.title = "Hello Triangle"})
       : engine::Application{application_info} {
-    models_.emplace_back(engine::Model::CreateFromFile(device_, "assets/viking_room.obj"));
-    models_.back()->AttachTexture(engine::Texture::CreateFromFile(texture_manager_, "assets/viking_room.png"));
+//    models_.emplace_back(engine::Model::CreateFromFile(device_, "assets/viking_room.obj"));
+//    models_.back()->AttachTexture(engine::Texture::CreateFromFile(texture_manager_, "assets/viking_room.png"));
+
+    models_.push_back(std::make_unique<engine::Model>());
+    models_.back()->AttachMesh(engine::Mesh::CreateSphereMesh(device_, 512));
+    models_.back()->AttachTexture(engine::Texture::CreateFromFile(texture_manager_, "assets/earth.jpg"));
   }
 
   void OnFrame(float frame_time) override {}
