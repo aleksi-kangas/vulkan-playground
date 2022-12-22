@@ -38,12 +38,14 @@ class Device {
   [[nodiscard]] uint32_t GetPresentQueueFamilyIndex() const { return present_queue_family_index_; }
 
   [[nodiscard]] uint32_t QueryMemoryType(uint32_t type_filter, VkMemoryPropertyFlags memory_property_flags) const;
+  [[nodiscard]] VkFormat QuerySupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+                                              VkFormatFeatureFlags features) const;
   [[nodiscard]] SwapchainSupportDetails QuerySwapchainSupportDetails() const {
     return QuerySwapchainSupportDetails(physical_device_, surface_);
   }
 
- VkCommandBuffer BeginSingleTimeCommands();
- void EndSingleTimeCommands(VkCommandBuffer command_buffer);
+  VkCommandBuffer BeginSingleTimeCommands();
+  void EndSingleTimeCommands(VkCommandBuffer command_buffer);
 
  private:
   Window& window_;

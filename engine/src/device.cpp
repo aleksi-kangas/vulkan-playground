@@ -169,6 +169,26 @@ uint32_t Device::QueryMemoryType(uint32_t type_filter, VkMemoryPropertyFlags mem
   throw std::runtime_error{"Failed to find suitable memory type!"};
 }
 
+VkFormat Device::QuerySupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+                                      VkFormatFeatureFlags features) const {
+  auto it = std::find_if(candidates.begin(), candidates.end(), [&](VkFormat format) {
+    VkFormatProperties properties;
+    vkGetPhysicalDeviceFormatProperties(physical_device_, format, &properties);
+
+    if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & features) == features) {
+      return true;
+    } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & features) == features) {
+      return true;
+    }
+
+    return false;
+  });
+  if (it != candidates.end()) {
+    return *it;
+  }
+  throw std::runtime_error{"Failed to find supported format!"};
+}
+
 VkCommandBuffer Device::BeginSingleTimeCommands() {
   VkCommandBufferAllocateInfo command_buffer_allocate_info{};
   command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

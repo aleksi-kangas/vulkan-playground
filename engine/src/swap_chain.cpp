@@ -11,6 +11,7 @@ Swapchain::Swapchain(Device& device, VkExtent2D window_extent, std::unique_ptr<S
     : device_{device}, window_extent_{window_extent} {
   CreateSwapChain(std::move(old_swapchain));
   CreateImageViews();
+  CreateDepthResources();
   CreateRenderPass();
   CreateFrameBuffers();
   CreateSynchronizationObjects();
@@ -28,6 +29,12 @@ Swapchain::~Swapchain() {
   }
 
   vkDestroyRenderPass(device_.GetHandle(), render_pass_, nullptr);
+
+  for (size_t i = 0; i < depth_images_.size(); ++i) {
+    vkDestroyImageView(device_.GetHandle(), depth_image_views_[i], nullptr);
+    vkDestroyImage(device_.GetHandle(), depth_images_[i], nullptr);
+    vkFreeMemory(device_.GetHandle(), depth_images_memory_[i], nullptr);
+  }
 
   for (auto image_view : image_views_) {
     vkDestroyImageView(device_.GetHandle(), image_view, nullptr);
@@ -152,19 +159,36 @@ void Swapchain::CreateRenderPass() {
   color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+  VkAttachmentDescription depth_attachment{};
+  depth_attachment.format = depth_image_format_;
+  depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+  depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
   VkAttachmentReference color_attachment_ref{};
   color_attachment_ref.attachment = 0;
   color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  VkAttachmentReference depth_attachment_ref{};
+  depth_attachment_ref.attachment = 1;
+  depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
   VkSubpassDescription subpass{};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.colorAttachmentCount = 1;
   subpass.pColorAttachments = &color_attachment_ref;
+  subpass.pDepthStencilAttachment = &depth_attachment_ref;
+
+  std::array<VkAttachmentDescription, 2> attachments = {color_attachment, depth_attachment};
 
   VkRenderPassCreateInfo render_pass_info{};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  render_pass_info.attachmentCount = 1;
-  render_pass_info.pAttachments = &color_attachment;
+  render_pass_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+  render_pass_info.pAttachments = attachments.data();
   render_pass_info.subpassCount = 1;
   render_pass_info.pSubpasses = &subpass;
 
@@ -198,11 +222,70 @@ void Swapchain::CreateImageViews() {
   }
 }
 
+void Swapchain::CreateDepthResources() {
+  depth_image_format_ =
+      device_.QuerySupportedFormat({VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+                                   VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+  depth_images_.resize(images_.size());
+  depth_images_memory_.resize(images_.size());
+  depth_image_views_.resize(images_.size());
+
+  for (size_t i = 0; i < images_.size(); ++i) {
+    VkImageCreateInfo image_info{};
+    image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    image_info.imageType = VK_IMAGE_TYPE_2D;
+    image_info.extent.width = swapchain_extent_.width;
+    image_info.extent.height = swapchain_extent_.height;
+    image_info.extent.depth = 1;
+    image_info.mipLevels = 1;
+    image_info.arrayLayers = 1;
+    image_info.format = depth_image_format_;
+    image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+    image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+    image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    if (vkCreateImage(device_.GetHandle(), &image_info, nullptr, &depth_images_[i]) != VK_SUCCESS) {
+      throw std::runtime_error{"Failed to create depth image!"};
+    }
+
+    VkMemoryRequirements memory_requirements{};
+    vkGetImageMemoryRequirements(device_.GetHandle(), depth_images_[i], &memory_requirements);
+
+    VkMemoryAllocateInfo memory_allocate_info{};
+    memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    memory_allocate_info.allocationSize = memory_requirements.size;
+    memory_allocate_info.memoryTypeIndex =
+        device_.QueryMemoryType(memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    if (vkAllocateMemory(device_.GetHandle(), &memory_allocate_info, nullptr, &depth_images_memory_[i]) != VK_SUCCESS) {
+      throw std::runtime_error{"Failed to allocate image memory!"};
+    }
+    if (vkBindImageMemory(device_.GetHandle(), depth_images_[i], depth_images_memory_[i], 0) != VK_SUCCESS) {
+      throw std::runtime_error{"Failed to bind image memory!"};
+    }
+
+    VkImageViewCreateInfo image_view_info{};
+    image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    image_view_info.image = depth_images_[i];
+    image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    image_view_info.format = depth_image_format_;
+    image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    image_view_info.subresourceRange.baseMipLevel = 0;
+    image_view_info.subresourceRange.levelCount = 1;
+    image_view_info.subresourceRange.baseArrayLayer = 0;
+    image_view_info.subresourceRange.layerCount = 1;
+    if (vkCreateImageView(device_.GetHandle(), &image_view_info, nullptr, &depth_image_views_[i]) != VK_SUCCESS) {
+      throw std::runtime_error{"Failed to create image view!"};
+    }
+  }
+}
+
 void Swapchain::CreateFrameBuffers() {
   framebuffers_.resize(image_views_.size());
 
   for (size_t i = 0; i < image_views_.size(); ++i) {
-    std::array<VkImageView, 1> attachments = {image_views_[i]};
+    std::array<VkImageView, 2> attachments = {image_views_[i], depth_image_views_[i]};
 
     VkFramebufferCreateInfo framebuffer_info{};
     framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

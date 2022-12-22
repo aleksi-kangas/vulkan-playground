@@ -39,6 +39,11 @@ class Swapchain {
   std::vector<VkImage> images_;
   std::vector<VkImageView> image_views_;
 
+  VkFormat depth_image_format_ = VK_FORMAT_UNDEFINED;
+  std::vector<VkImage> depth_images_;
+  std::vector<VkDeviceMemory> depth_images_memory_;
+  std::vector<VkImageView> depth_image_views_;
+
   VkRenderPass render_pass_ = VK_NULL_HANDLE;
   std::vector<VkFramebuffer> framebuffers_;
 
@@ -54,6 +59,7 @@ class Swapchain {
 
   void CreateSwapChain(std::unique_ptr<Swapchain> old_swapchain);
   void CreateImageViews();
+  void CreateDepthResources();
   void CreateRenderPass();
   void CreateFrameBuffers();
   void CreateSynchronizationObjects();

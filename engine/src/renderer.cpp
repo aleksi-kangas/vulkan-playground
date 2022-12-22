@@ -56,11 +56,12 @@ void Renderer::BeginRenderPass(VkCommandBuffer command_buffer) const {
   render_pass_begin_info.renderArea.offset = {0, 0};
   render_pass_begin_info.renderArea.extent = swap_chain_->GetExtent();
 
-  VkClearValue clear_color{
-      .color = {{0.0f, 0.0f, 0.0f, 1.0f}},
-  };
-  render_pass_begin_info.clearValueCount = 1;
-  render_pass_begin_info.pClearValues = &clear_color;
+  std::array<VkClearValue, 2> clear_values = {{
+      {.color = {{0.0f, 0.0f, 0.0f, 1.0f}}},
+      {.depthStencil = {1.0f, 0}},
+  }};
+  render_pass_begin_info.clearValueCount = static_cast<uint32_t>(clear_values.size());
+  render_pass_begin_info.pClearValues = clear_values.data();
 
   vkCmdBeginRenderPass(command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
 }
