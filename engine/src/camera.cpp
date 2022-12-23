@@ -7,6 +7,14 @@ namespace engine {
 void Camera::ProcessInput(float delta_time) {
   bool view_changed = false;
 
+  const glm::vec3 forward_direction = glm::normalize(glm::vec3{
+      cos(rotation_.y) * cos(rotation_.x),
+      sin(rotation_.x),
+      sin(rotation_.y) * cos(rotation_.x),
+  });
+  const glm::vec3 right_direction = glm::normalize(glm::cross(forward_direction, kWorldUp));
+  const glm::vec3 up_direction = glm::normalize(glm::cross(right_direction, forward_direction));
+
   // Rotation
   glm::vec3 rotate{0.0f};
   if (window_.IsKeyPressed(Keys::kLeft))
@@ -23,11 +31,6 @@ void Camera::ProcessInput(float delta_time) {
     rotation_.y = glm::mod(rotation_.y, glm::two_pi<float>());
     view_changed = true;
   }
-
-  const float yaw = rotation_.y;
-  const glm::vec3 forward_direction{sin(yaw), 0.0f, cos(yaw)};
-  const glm::vec3 right_direction{forward_direction.z, 0.0f, -forward_direction.x};
-  const glm::vec3 up_direction{0.0f, -1.0f, 0.0f};
 
   // Translation
   glm::vec3 translation{};
@@ -54,13 +57,20 @@ void Camera::ProcessInput(float delta_time) {
 }
 
 void Camera::SetPerspective(float fov_y, float aspect, float near, float far) {
-  // Need to explicitly use left-handed perspective, because we use a coordinate system where:
-  // +X is right, -Y is up, and +Z is forward.
-  projection_ = glm::perspectiveLH(fov_y, aspect, near, far);
+  projection_ = glm::perspective(fov_y, aspect, near, far);
+  projection_[1][1] *= -1.0f;
 }
 
 void Camera::RecomputeView() {
-  view_ = glm::inverse(glm::eulerAngleYXZ(rotation_.y, rotation_.x, rotation_.z)) * glm::translate(glm::mat4{1.0f}, -position_);
+  const float pitch = rotation_.x;
+  const float yaw = rotation_.y;
+  const glm::vec3 forward_direction = glm::normalize(glm::vec3{
+      cos(yaw) * cos(pitch),
+      sin(pitch),
+      sin(yaw) * cos(pitch),
+  });
+
+  view_ = glm::lookAt(position_, position_ + forward_direction, kWorldUp);
 }
 
 }  // namespace engine
