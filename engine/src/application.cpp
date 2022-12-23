@@ -19,7 +19,7 @@ Application::Application(const ApplicationInfo& application_info)
 
   // Descriptor set layout
   std::array<VkDescriptorSetLayoutBinding, 1> global_descriptor_set_layout_bindings{
-      {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr}},
+      {{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, nullptr}},
   };
   VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info{};
   descriptor_set_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -58,6 +58,8 @@ Application::Application(const ApplicationInfo& application_info)
 
   model_render_system_ =
       std::make_unique<systems::ModelRenderSystem>(device_, renderer_.GetRenderPass(), global_descriptor_set_layout_);
+  point_light_render_system_ = std::make_unique<systems::PointLightRenderSystem>(device_, renderer_.GetRenderPass(),
+                                                                                 global_descriptor_set_layout_);
 }
 
 Application::~Application() {
@@ -97,6 +99,7 @@ void Application::DrawFrame() {
     renderer_.BeginRenderPass(command_buffer);
 
     model_render_system_->Render(command_buffer, models_, global_descriptor_sets_[renderer_.GetFrameIndex()]);
+    point_light_render_system_->Render(command_buffer, global_descriptor_sets_[renderer_.GetFrameIndex()]);
 
     renderer_.EndRenderPass(command_buffer);
     renderer_.EndFrame();

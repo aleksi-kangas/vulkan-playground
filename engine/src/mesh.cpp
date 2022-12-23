@@ -23,7 +23,7 @@ glm::vec3 CubeToSphere(glm::vec3 cube_point) {
 glm::vec2 SphereToUV(glm::vec3 sphere_point) {
   const float u = 0.5f + atan2(sphere_point.z, sphere_point.x) / (2 * glm::pi<float>());
   const float v = 0.5f - asin(sphere_point.y) / glm::pi<float>();
-  return {u, -v};
+  return {-u, v};
 }
 
 void GenerateCubeFace(const CubeFace& cube_face, uint32_t cube_face_resolution, std::vector<engine::Vertex>& vertices,
@@ -39,7 +39,8 @@ void GenerateCubeFace(const CubeFace& cube_face, uint32_t cube_face_resolution, 
                                cube_face.v * (static_cast<float>(v) / static_cast<float>(cube_face_resolution - 1));
       engine::Vertex vertex{};
       vertex.position = CubeToSphere(cube_face.origin + offset);
-      // TODO Normal
+      vertex.normal = glm::normalize(vertex.position);
+      vertex.color = {1.0f, 1.0f, 1.0f};
       vertex.uv = SphereToUV(vertex.position);
       vertices[vertex_index] = vertex;
 

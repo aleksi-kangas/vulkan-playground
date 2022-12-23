@@ -9,6 +9,7 @@
 #include "engine/model.h"
 #include "engine/renderer.h"
 #include "engine/systems/model_render_system.h"
+#include "engine/systems/point_light_render_system.h"
 #include "engine/window.h"
 #include "engine/texture.h"
 
@@ -39,6 +40,7 @@ class Application {
 
  private:
   std::unique_ptr<engine::systems::ModelRenderSystem> model_render_system_;
+  std::unique_ptr<engine::systems::PointLightRenderSystem> point_light_render_system_;
 
   // TODO Abstraction?
   std::vector<std::unique_ptr<Buffer>> uniform_buffers_{Swapchain::kMaxFramesInFlight};

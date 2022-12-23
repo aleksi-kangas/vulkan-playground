@@ -34,6 +34,7 @@ add_library(${PROJECT_NAME}
         include/engine/window.h src/window.cpp
 
         include/engine/systems/model_render_system.h src/systems/model_render_system.cpp
+        include/engine/systems/point_light_render_system.h src/systems/point_light_render_system.cpp
         )
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_include_directories(${PROJECT_NAME} PRIVATE lib)
